@@ -151,7 +151,8 @@ A single illuminated data stream flowing through a dark, abstract digital space)
     const brollKeywords = sections[3]?.replace('BROLL_KEYWORDS', '').trim().split(',').map((k: string) => k.trim()) || []
 
 
-    const imageConcepts = sections[4]?.replace('IMAGE_CONCEPTS', '').trim().split(',').map(c => c.trim()) || []
+    const imageConcepts = sections[4]?.replace('IMAGE_CONCEPTS', '').trim().split(',').map((c: string) => c.trim()) || []
+
     const editingGuide = sections[5]?.replace('EDITING_GUIDE', '').trim() || ''
 
     return {
