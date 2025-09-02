@@ -12,10 +12,10 @@
     }
   },
   "env": {
-    "NEXT_PUBLIC_SUPABASE_URL": "@supabase_url",
-    "NEXT_PUBLIC_SUPABASE_ANON_KEY": "@supabase_anon_key",
-    "SUPABASE_SERVICE_ROLE_KEY": "@supabase_service_role_key",
-    "ENCRYPTION_KEY": "@encryption_key"
+    "NEXT_PUBLIC_SUPABASE_URL": https://hfqsndavjbfiuiitjxzb.supabase.co,
+    "NEXT_PUBLIC_SUPABASE_ANON_KEY": eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImhmcXNuZGF2amJmaXVpaXRqeHpiIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NTY3OTE3MjEsImV4cCI6MjA3MjM2NzcyMX0.dMPy_1-esH8Kf4yZbKTcs_DZmqPVfii5BMwMu1wgWJY,
+    "SUPABASE_SERVICE_ROLE_KEY ":eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImhmcXNuZGF2amJmaXVpaXRqeHpiIiwicm9sZSI6InNlcnZpY2Vfcm9sZSIsImlhdCI6MTc1Njc5MTcyMSwiZXhwIjoyMDcyMzY3NzIxfQ.qv90zcMuY06csOUioo_d8R-kxgDhLJfo6oU-SHmP3Pg,
+    "ENCRYPTION_KEY": aBc1D2eF3gH4iJ5kL6mN7oP8qR9sT0
   }
 }
 
