@@ -1,62 +1,14 @@
 'use client'
 
-import { useState, useEffect } from 'react'
-import { supabase } from '@/lib/supabaseClient'
-import { User } from '@supabase/supabase-js'
+import { useState } from 'react'
 import VideoGenerator from '@/components/VideoGenerator'
 import NewsGatherer from '@/components/NewsGatherer'
 import AssetGatherer from '@/components/AssetGatherer'
 import Settings from '@/components/Settings'
 
-export default function Dashboard() {
-  const [user, setUser] = useState<User | null>(null)
-  const [loading, setLoading] = useState(true)
+export default function DemoDashboard() {
   const [activeTab, setActiveTab] = useState('overview')
   const [sidebarOpen, setSidebarOpen] = useState(false)
-
-  useEffect(() => {
-    const getUser = async () => {
-      const { data: { user } } = await supabase.auth.getUser()
-      if (!user) {
-        window.location.href = '/'
-        return
-      }
-      setUser(user)
-      setLoading(false)
-    }
-
-    getUser()
-
-    const { data: { subscription } } = supabase.auth.onAuthStateChange(
-      (event, session) => {
-        if (!session?.user) {
-          window.location.href = '/'
-        } else {
-          setUser(session.user)
-          setLoading(false)
-        }
-      }
-    )
-
-    return () => subscription.unsubscribe()
-  }, [])
-
-  const signOut = async () => {
-    await supabase.auth.signOut()
-    window.location.href = '/'
-  }
-
-  if (loading) {
-    return (
-      <div className="min-h-screen flex items-center justify-center">
-        <div className="loading-spinner"></div>
-      </div>
-    )
-  }
-
-  if (!user) {
-    return null
-  }
 
   const menuItems = [
     {
@@ -175,25 +127,12 @@ export default function Dashboard() {
           <div className="px-4 py-4 border-t border-primary">
             <div className="flex items-center space-x-3">
               <div className="w-10 h-10 bg-gradient-to-br from-blue-500 to-purple-600 rounded-full flex items-center justify-center">
-                <span className="text-sm font-medium text-white">
-                  {user.email?.charAt(0).toUpperCase()}
-                </span>
+                <span className="text-sm font-medium text-white">D</span>
               </div>
               <div className="flex-1 min-w-0">
-                <p className="text-sm font-medium text-primary truncate">
-                  {user.email}
-                </p>
+                <p className="text-sm font-medium text-primary truncate">Demo User</p>
                 <p className="text-xs text-secondary">Pro Plan</p>
               </div>
-              <button
-                onClick={signOut}
-                className="p-2 text-secondary hover:text-primary transition-colors"
-                title="Sign out"
-              >
-                <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1" />
-                </svg>
-              </button>
             </div>
           </div>
         </div>
