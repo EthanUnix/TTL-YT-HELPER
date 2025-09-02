@@ -66,14 +66,16 @@ export default function Dashboard() {
   }
 
   return (
-    <div className="min-h-screen flex">
+    <div className="min-h-screen flex flex-col lg:flex-row">
       <Sidebar 
         activeTab={activeTab} 
         setActiveTab={setActiveTab}
         user={user}
       />
-      <main className="flex-1 ml-64">
-        {renderContent()}
+      <main className="flex-1 pt-16 lg:pt-0 lg:ml-0">
+        <div className="min-h-screen">
+          {renderContent()}
+        </div>
       </main>
     </div>
   )
