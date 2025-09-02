@@ -13,13 +13,17 @@ export async function POST(request: NextRequest) {
 
     switch (service) {
       case 'gemini':
-        success = await testGeminiConnection(apiKey)
+        const geminiResult = await testGeminiConnection(apiKey)
+        success = geminiResult.success
+        error = geminiResult.error
         break
       case 'huggingface':
         success = await testHuggingFaceConnection(apiKey)
+        if (!success) error = 'Failed to connect to Hugging Face API'
         break
       case 'pexels':
         success = await testPexelsConnection(apiKey)
+        if (!success) error = 'Failed to connect to Pexels API'
         break
       default:
         error = 'Unknown service'
@@ -32,26 +36,76 @@ export async function POST(request: NextRequest) {
   }
 }
 
-async function testGeminiConnection(apiKey: string): Promise<boolean> {
-  try {
-    const response = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/gemini-pro:generateContent?key=${apiKey}`, {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-      },
-      body: JSON.stringify({
-        contents: [{
-          parts: [{
-            text: 'Hello, this is a test.'
-          }]
-        }]
-      })
-    })
+async function testGeminiConnection(apiKey: string): Promise<{success: boolean, error: string}> {
+  // List of Gemini models to try in order of preference
+  const modelsToTry = [
+    'gemini-2.0-flash-exp',
+    'gemini-1.5-pro',
+    'gemini-1.5-flash',
+    'gemini-pro'
+  ]
 
-    return response.ok
-  } catch (error) {
-    console.error('Gemini connection test failed:', error)
-    return false
+  let lastError = ''
+
+  for (const model of modelsToTry) {
+    try {
+      console.log(`Testing Gemini model: ${model}`)
+      
+      const response = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/${model}:generateContent?key=${apiKey}`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          contents: [{
+            parts: [{
+              text: 'Hello, this is a test message. Please respond with "Test successful".'
+            }]
+          }],
+          generationConfig: {
+            temperature: 0.1,
+            maxOutputTokens: 50
+          }
+        })
+      })
+
+      if (response.ok) {
+        const data = await response.json()
+        
+        // Check if the response contains the expected structure
+        if (data.candidates && data.candidates.length > 0 && data.candidates[0].content) {
+          console.log(`Successfully connected using model: ${model}`)
+          return { success: true, error: '' }
+        }
+      } else {
+        const errorText = await response.text()
+        console.log(`Model ${model} failed with status ${response.status}: ${errorText}`)
+        
+        // Store the error from the first (preferred) model
+        if (model === modelsToTry[0]) {
+          if (response.status === 400) {
+            lastError = 'Invalid API key or request format'
+          } else if (response.status === 403) {
+            lastError = 'API key does not have permission or quota exceeded'
+          } else if (response.status === 404) {
+            lastError = 'Model not available for this API key'
+          } else {
+            lastError = `API error: ${response.status} ${response.statusText}`
+          }
+        }
+      }
+    } catch (error) {
+      console.log(`Network error testing model ${model}:`, error)
+      if (model === modelsToTry[0]) {
+        lastError = 'Network error or invalid API key'
+      }
+    }
+  }
+
+  // If we get here, none of the models worked
+  return { 
+    success: false, 
+    error: lastError || 'No compatible Gemini models available for this API key'
   }
 }
 
