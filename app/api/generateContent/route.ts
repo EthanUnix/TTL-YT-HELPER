@@ -148,7 +148,8 @@ A single illuminated data stream flowing through a dark, abstract digital space)
     const sections = generatedText.split('###')
     const titles = sections[1]?.replace('TITLES', '').trim().split('\n').filter(Boolean) || []
     const script = sections[2]?.replace('SCRIPT', '').trim() || ''
-    const brollKeywords = sections[3]?.replace('BROLL_KEYWORDS', '').trim().split(',').map(k => k.trim()) || []
+    const brollKeywords = sections[3]?.replace(\'BROLL_KEYWORDS\', \'\').trim().split(\'\').map((k: string) => k.trim()) || []
+
     const imageConcepts = sections[4]?.replace('IMAGE_CONCEPTS', '').trim().split(',').map(c => c.trim()) || []
     const editingGuide = sections[5]?.replace('EDITING_GUIDE', '').trim() || ''
 
