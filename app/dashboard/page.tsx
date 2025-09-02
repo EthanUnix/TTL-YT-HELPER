@@ -72,7 +72,7 @@ export default function Dashboard() {
         setActiveTab={setActiveTab}
         user={user}
       />
-      <main className="flex-1 pt-16 lg:pt-0 lg:ml-0">
+      <main className="flex-1 pt-16 lg:pt-0 lg:ml-64">
         <div className="min-h-screen">
           {renderContent()}
         </div>
