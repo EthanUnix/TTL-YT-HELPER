@@ -1,0 +1,21 @@
+{
+  "framework": "nextjs",
+  "buildCommand": "pnpm build",
+  "devCommand": "pnpm dev",
+  "installCommand": "pnpm install",
+  "functions": {
+    "app/api/generateContent/route.ts": {
+      "maxDuration": 300
+    },
+    "app/api/testConnection/route.ts": {
+      "maxDuration": 30
+    }
+  },
+  "env": {
+    "NEXT_PUBLIC_SUPABASE_URL": "@supabase_url",
+    "NEXT_PUBLIC_SUPABASE_ANON_KEY": "@supabase_anon_key",
+    "SUPABASE_SERVICE_ROLE_KEY": "@supabase_service_role_key",
+    "ENCRYPTION_KEY": "@encryption_key"
+  }
+}
+
