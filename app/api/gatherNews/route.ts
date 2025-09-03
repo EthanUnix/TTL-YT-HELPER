@@ -18,6 +18,40 @@ interface NewsAPIResponse {
   articles: NewsArticle[]
 }
 
+// New interface for TheNewsAPI response
+interface TheNewsAPIArticle {
+  title: string;
+  description: string;
+  url: string;
+  image_url: string | null;
+  published_at: string;
+  source: string;
+  snippet: string;
+}
+
+interface TheNewsAPIResponse {
+  data: TheNewsAPIArticle[];
+}
+
+interface GNewsSource {
+  name: string;
+  url: string;
+}
+
+interface GNewsArticle {
+  title: string;
+  description: string;
+  url: string;
+  image: string | null;
+  publishedAt: string;
+  source: GNewsSource;
+  content: string;
+}
+
+interface GNewsAPIResponse {
+  articles: GNewsArticle[];
+}
+
 export async function POST(request: NextRequest) {
   try {
     const { topic = 'artificial intelligence', category = 'technology', days = 1 } = await request.json()
@@ -116,10 +150,11 @@ async function fetchTheNewsAPI(topic: string, category: string): Promise<NewsArt
     throw new Error(`TheNewsAPI failed: ${response.status} ${response.statusText}`)
   }
 
-  const data = await response.json()
+  // Type the data variable explicitly
+  const data: TheNewsAPIResponse = await response.json()
   
   // Convert to NewsAPI format
-  return (data.data || []).map((article: any) => ({
+  return (data.data || []).map((article: TheNewsAPIArticle) => ({
     title: article.title,
     description: article.description,
     url: article.url,
@@ -145,10 +180,11 @@ async function fetchGNewsAPI(topic: string): Promise<NewsArticle[]> {
     throw new Error(`GNews failed: ${response.status} ${response.statusText}`)
   }
 
-  const data = await response.json()
+  // Type the data variable explicitly
+  const data: GNewsAPIResponse = await response.json()
   
   // Convert to NewsAPI format
-  return (data.articles || []).map((article: any) => ({
+  return (data.articles || []).map((article: GNewsArticle) => ({
     title: article.title,
     description: article.description,
     url: article.url,
@@ -185,19 +221,13 @@ function removeDuplicateArticles(articles: NewsArticle[]): NewsArticle[] {
   return unique
 }
 
-// Simple string similarity calculation
+// Simple string similarity calculation (Jaccard Index)
 function calculateSimilarity(str1: string, str2: string): number {
-  const words1 = str1.split(' ')
-  const words2 = str2.split(' ')
-  const allWords = new Set([...words1, ...words2])
-  
-  let commonWords = 0
-  for (const word of allWords) {
-    if (words1.includes(word) && words2.includes(word)) {
-      commonWords++
-    }
-  }
-  
-  return commonWords / allWords.size
-}
+  const set1 = new Set(str1.split(' '));
+  const set2 = new Set(str2.split(' '));
 
+  const intersection = new Set([...set1].filter(x => set2.has(x)));
+  const union = new Set([...set1, ...set2]);
+
+  return intersection.size / union.size;
+}
