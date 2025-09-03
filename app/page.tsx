@@ -255,7 +255,7 @@ export default function LandingPage() {
             <span className="text-gradient">Content Creation?</span>
           </h2>
           <p className="text-xl text-secondary mb-8 max-w-2xl mx-auto">
-            Join thousands of creators who've already 10x'd their productivity with AI-powered content tools.
+            Join thousands of creators who&apos;ve already 10x&apos;d their productivity with AI-powered content tools.
           </p>
           <button
             onClick={signInWithGoogle}
@@ -289,4 +289,3 @@ export default function LandingPage() {
     </div>
   )
 }
-
