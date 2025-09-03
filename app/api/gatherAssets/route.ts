@@ -26,6 +26,80 @@ interface VideoAsset {
   height: number
 }
 
+// Interfaces for Pexels API
+interface PexelsPhoto {
+  id: number;
+  url: string;
+  src: {
+    large: string;
+    medium: string;
+  };
+  alt: string;
+  photographer: string;
+  width: number;
+  height: number;
+}
+
+interface PexelsImageResponse {
+  photos: PexelsPhoto[];
+}
+
+interface PexelsVideoFile {
+  link: string;
+}
+
+interface PexelsVideo {
+  id: number;
+  url: string;
+  image: string;
+  user: { name: string };
+  duration: number;
+  width: number;
+  height: number;
+  video_files: PexelsVideoFile[];
+}
+
+interface PexelsVideoResponse {
+  videos: PexelsVideo[];
+}
+
+// Interfaces for Unsplash API
+interface UnsplashUser {
+  name: string;
+}
+
+interface UnsplashPhoto {
+  id: string;
+  links: { html: string };
+  urls: { regular: string; small: string };
+  alt_description: string;
+  description: string;
+  user: UnsplashUser;
+  tags: { title: string }[];
+  width: number;
+  height: number;
+}
+
+interface UnsplashImageResponse {
+  results: UnsplashPhoto[];
+}
+
+// Interfaces for Pixabay API
+interface PixabayPhoto {
+  id: number;
+  pageURL: string;
+  largeImageURL: string;
+  webformatURL: string;
+  tags: string;
+  user: string;
+  imageWidth: number;
+  imageHeight: number;
+}
+
+interface PixabayImageResponse {
+  hits: PixabayPhoto[];
+}
+
 export async function POST(request: NextRequest) {
   try {
     const { 
@@ -141,9 +215,9 @@ async function fetchPexelsImages(keywords: string[], count: number, orientation:
     throw new Error(`Pexels Images API failed: ${response.status}`)
   }
 
-  const data = await response.json()
+  const data: PexelsImageResponse = await response.json()
   
-  return (data.photos || []).map((photo: any) => ({
+  return (data.photos || []).map((photo: PexelsPhoto) => ({
     id: `pexels-img-${photo.id}`,
     url: photo.url,
     downloadUrl: photo.src.large,
@@ -179,15 +253,15 @@ async function fetchUnsplashImages(keywords: string[], count: number, orientatio
     throw new Error(`Unsplash API failed: ${response.status}`)
   }
 
-  const data = await response.json()
+  const data: UnsplashImageResponse = await response.json()
   
-  return (data.results || []).map((photo: any) => ({
+  return (data.results || []).map((photo: UnsplashPhoto) => ({
     id: `unsplash-img-${photo.id}`,
     url: photo.links.html,
     downloadUrl: photo.urls.regular,
     thumbnailUrl: photo.urls.small,
     description: photo.alt_description || photo.description || `Photo by ${photo.user.name}`,
-    tags: photo.tags?.map((tag: any) => tag.title) || keywords,
+    tags: photo.tags?.map((tag: { title: string }) => tag.title) || keywords,
     source: 'Unsplash',
     photographer: photo.user.name,
     width: photo.width,
@@ -213,9 +287,9 @@ async function fetchPixabayImages(keywords: string[], count: number, orientation
     throw new Error(`Pixabay API failed: ${response.status}`)
   }
 
-  const data = await response.json()
+  const data: PixabayImageResponse = await response.json()
   
-  return (data.hits || []).map((photo: any) => ({
+  return (data.hits || []).map((photo: PixabayPhoto) => ({
     id: `pixabay-img-${photo.id}`,
     url: photo.pageURL,
     downloadUrl: photo.largeImageURL,
@@ -250,9 +324,9 @@ async function fetchPexelsVideos(keywords: string[], count: number): Promise<Vid
     throw new Error(`Pexels Videos API failed: ${response.status}`)
   }
 
-  const data = await response.json()
+  const data: PexelsVideoResponse = await response.json()
   
-  return (data.videos || []).map((video: any) => ({
+  return (data.videos || []).map((video: PexelsVideo) => ({
     id: `pexels-vid-${video.id}`,
     url: video.url,
     downloadUrl: video.video_files[0]?.link || '',
@@ -281,4 +355,3 @@ function removeDuplicateImages(images: ImageAsset[]): ImageAsset[] {
 
   return unique
 }
-
