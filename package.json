@@ -28,6 +28,7 @@
     "tailwindcss": "^4",
     "typescript": "^5",
     "@types/archiver": "^6.0.2",
-    "@types/node-fetch": "^2.6.11"
+    "@types/node-fetch": "^2.6.11",
+    "@types/form-data": "^2.5.2"
   }
 }

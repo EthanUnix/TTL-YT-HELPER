@@ -39,6 +39,9 @@ importers:
       '@types/archiver':
         specifier: ^6.0.2
         version: 6.0.3
+      '@types/form-data':
+        specifier: ^2.5.2
+        version: 2.5.2
       '@types/node':
         specifier: ^20
         version: 20.19.11
@@ -487,6 +490,10 @@ packages:
 
   '@types/estree@1.0.8':
     resolution: {integrity: sha512-dWHzHa2WqEXI/O1E9OjrocMTKJl2mSrEolh1Iomrv6U+JuNwaHXsXx9bLu5gG7BUWFIN0skIQJQ/L1rIex4X6w==}
+
+  '@types/form-data@2.5.2':
+    resolution: {integrity: sha512-tfmcyHn1Pp9YHAO5r40+UuZUPAZbUEgqTel3EuEKpmF9hPkXgR4l41853raliXnb4gwyPNoQOfvgGGlHN5WSog==}
+    deprecated: This is a stub types definition. form-data provides its own type definitions, so you do not need this installed.
 
   '@types/json-schema@7.0.15':
     resolution: {integrity: sha512-5+fP8P8MFNC+AyZCDxrB2pkZFPGzqQWUzpSeuuVLvm8VMcorNYavBqoFcxK8bQz4Qsbn4oUEEem4wDLfcysGHA==}
@@ -2512,6 +2519,10 @@ snapshots:
       '@types/readdir-glob': 1.1.5
 
   '@types/estree@1.0.8': {}
+
+  '@types/form-data@2.5.2':
+    dependencies:
+      form-data: 4.0.4
 
   '@types/json-schema@7.0.15': {}
 
