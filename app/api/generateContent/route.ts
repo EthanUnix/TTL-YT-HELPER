@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server'
-import { supabase } from '@/lib/supabaseClient'
+import { getUserApiKeys, uploadPublicAsset } from '@/lib/supabaseAdmin'
 import archiver from 'archiver'
 import { Readable } from 'stream'
 
@@ -7,29 +7,14 @@ export async function POST(request: NextRequest) {
   try {
     const { topic, format, voice } = await request.json()
 
-    // Get user from auth header
-    const authHeader = request.headers.get('authorization')
-    if (!authHeader) {
-      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
+    const { user, keys: apiKeysData } = await getUserApiKeys(request)
+
+    if (!user) {
+      return NextResponse.json({ error: 'Please sign in again.' }, { status: 401 })
     }
 
-    // Get user API keys from database
-    const { data: { user }, error: userError } = await supabase.auth.getUser(
-      authHeader.replace('Bearer ', '')
-    )
-    
-    if (userError || !user) {
-      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
-    }
-
-    const { data: apiKeysData, error: keysError } = await supabase
-      .from('user_api_keys')
-      .select('*')
-      .eq('user_id', user.id)
-      .single()
-
-    if (keysError || !apiKeysData) {
-      return NextResponse.json({ error: 'API keys not configured' }, { status: 400 })
+    if (!apiKeysData?.gemini_key || !apiKeysData.pexels_key || !apiKeysData.huggingface_key) {
+      return NextResponse.json({ error: 'Save all three API keys in Settings before generating content.' }, { status: 400 })
     }
 
     // Step 1: Generate content using Gemini
@@ -149,10 +134,7 @@ A single illuminated data stream flowing through a dark, abstract digital space)
     const titles = sections[1]?.replace('TITLES', '').trim().split('\n').filter(Boolean) || []
     const script = sections[2]?.replace('SCRIPT', '').trim() || ''
     const brollKeywords = sections[3]?.replace('BROLL_KEYWORDS', '').trim().split(',').map((k: string) => k.trim()) || []
-
-
     const imageConcepts = sections[4]?.replace('IMAGE_CONCEPTS', '').trim().split(',').map((c: string) => c.trim()) || []
-
     const editingGuide = sections[5]?.replace('EDITING_GUIDE', '').trim() || ''
 
     return {
@@ -257,20 +239,7 @@ async function createVisualsZip(assets: Buffer[]): Promise<Buffer> {
 
 async function uploadToStorage(filename: string, data: Buffer | string, contentType: string): Promise<string> {
   try {
-    const { data: uploadData, error } = await supabase.storage
-      .from('content-assets')
-      .upload(filename, data, {
-        contentType,
-        upsert: true
-      })
-
-    if (error) throw error
-
-    const { data: urlData } = supabase.storage
-      .from('content-assets')
-      .getPublicUrl(filename)
-
-    return urlData.publicUrl
+    return await uploadPublicAsset(filename, data, contentType)
   } catch (error) {
     console.error('Error uploading to storage:', error)
     // Return a mock URL for development

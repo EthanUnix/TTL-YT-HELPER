@@ -1,6 +1,7 @@
 'use client'
 
 import { useState } from 'react'
+import { supabase } from '@/lib/supabaseClient'
 
 interface Message {
   id: string
@@ -12,124 +13,131 @@ interface Message {
 export default function ResearchChat() {
   const [messages, setMessages] = useState<Message[]>([
     {
-      id: '1',
-      content: 'Hello! I\'m your research assistant. I can help you gather information, analyze trends, and provide insights for your content creation. What would you like to research today?',
+      id: 'welcome',
+      content: 'Welcome to TheTechLounge Research Chat. Ask Gemini to explore a topic, stress-test an argument, outline a video, or explain a technical idea.',
       isUser: false,
-      timestamp: new Date()
-    }
+      timestamp: new Date(),
+    },
   ])
   const [inputMessage, setInputMessage] = useState('')
   const [isLoading, setIsLoading] = useState(false)
+  const [error, setError] = useState<string | null>(null)
 
   const sendMessage = async () => {
-    if (!inputMessage.trim()) return
+    const question = inputMessage.trim()
+    if (!question || isLoading) return
 
     const userMessage: Message = {
-      id: Date.now().toString(),
-      content: inputMessage,
+      id: crypto.randomUUID(),
+      content: question,
       isUser: true,
-      timestamp: new Date()
+      timestamp: new Date(),
     }
 
-    setMessages(prev => [...prev, userMessage])
+    const history = messages
+      .filter((message) => message.id !== 'welcome')
+      .map((message) => ({ role: message.isUser ? 'user' as const : 'model' as const, content: message.content }))
+
+    setMessages((previous) => [...previous, userMessage])
     setInputMessage('')
+    setError(null)
     setIsLoading(true)
 
-    // Simulate AI response (replace with actual API call)
-    setTimeout(() => {
-      const aiMessage: Message = {
-        id: (Date.now() + 1).toString(),
-        content: 'I understand you\'re looking for information about "' + inputMessage + '". Let me research that for you and provide some insights...\n\nThis is a placeholder response. In the full implementation, this would connect to research APIs and provide comprehensive analysis.',
-        isUser: false,
-        timestamp: new Date()
-      }
-      setMessages(prev => [...prev, aiMessage])
+    try {
+      const { data: { session } } = await supabase.auth.getSession()
+      if (!session?.access_token) throw new Error('Your session has expired. Please sign in again.')
+
+      const response = await fetch('/api/researchChat', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          Authorization: `Bearer ${session.access_token}`,
+        },
+        body: JSON.stringify({ message: question, history }),
+      })
+
+      const result = await response.json() as { answer?: string; error?: string }
+      const answer = result.answer
+      if (!response.ok || !answer) throw new Error(result.error || 'Gemini did not return an answer.')
+
+      setMessages((previous) => [
+        ...previous,
+        {
+          id: crypto.randomUUID(),
+          content: answer,
+          isUser: false,
+          timestamp: new Date(),
+        },
+      ])
+    } catch (requestError) {
+      const message = requestError instanceof Error ? requestError.message : 'Research chat could not be completed.'
+      setError(message)
+    } finally {
       setIsLoading(false)
-    }, 2000)
+    }
   }
 
-  const handleKeyPress = (e: React.KeyboardEvent) => {
-    if (e.key === 'Enter' && !e.shiftKey) {
-      e.preventDefault()
-      sendMessage()
+  const handleKeyDown = (event: React.KeyboardEvent<HTMLTextAreaElement>) => {
+    if (event.key === 'Enter' && !event.shiftKey) {
+      event.preventDefault()
+      void sendMessage()
     }
   }
 
   return (
-    <div className="p-8 min-h-screen">
-      <div className="max-w-4xl mx-auto">
-        <h1 className="text-3xl font-bold mb-8 gradient-text">Research Chat</h1>
-        
-        <div className="glass rounded-xl h-[calc(100vh-200px)] flex flex-col">
-          {/* Chat Messages */}
-          <div className="flex-1 p-6 overflow-y-auto space-y-4">
+    <div className="min-h-screen p-5 sm:p-8">
+      <div className="mx-auto max-w-4xl">
+        <div className="mb-8">
+          <p className="mb-2 text-xs font-semibold uppercase tracking-[0.18em] text-blue-400">Gemini-powered workspace</p>
+          <h1 className="gradient-text text-3xl font-bold">Research Chat</h1>
+          <p className="mt-2 text-sm text-gray-400">Your saved Gemini key is used only through the server-side research endpoint.</p>
+        </div>
+
+        <div className="glass flex h-[calc(100vh-220px)] min-h-[520px] flex-col overflow-hidden rounded-xl">
+          <div className="flex-1 space-y-5 overflow-y-auto p-5 sm:p-6">
             {messages.map((message) => (
-              <div
-                key={message.id}
-                className={`flex ${message.isUser ? 'justify-end' : 'justify-start'}`}
-              >
-                <div
-                  className={`max-w-[80%] p-4 rounded-lg ${
-                    message.isUser
-                      ? 'bg-blue-500 text-white'
-                      : 'bg-gray-800/50 text-gray-300'
-                  }`}
-                >
-                  <div className="whitespace-pre-wrap">{message.content}</div>
-                  <div className={`text-xs mt-2 ${
-                    message.isUser ? 'text-blue-100' : 'text-gray-500'
-                  }`}>
-                    {message.timestamp.toLocaleTimeString()}
-                  </div>
+              <div key={message.id} className={`flex ${message.isUser ? 'justify-end' : 'justify-start'}`}>
+                <div className={`max-w-[88%] rounded-2xl px-4 py-3 sm:max-w-[80%] ${message.isUser ? 'bg-blue-500 text-white' : 'border border-white/5 bg-gray-800/70 text-gray-200'}`}>
+                  <p className="whitespace-pre-wrap text-sm leading-6">{message.content}</p>
+                  <p className={`mt-2 text-[11px] ${message.isUser ? 'text-blue-100' : 'text-gray-500'}`}>
+                    {message.timestamp.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
+                  </p>
                 </div>
               </div>
             ))}
-            
+
             {isLoading && (
               <div className="flex justify-start">
-                <div className="bg-gray-800/50 text-gray-300 p-4 rounded-lg">
-                  <div className="flex items-center gap-2">
-                    <div className="animate-pulse">Researching...</div>
-                    <div className="flex space-x-1">
-                      <div className="w-2 h-2 bg-blue-400 rounded-full animate-bounce"></div>
-                      <div className="w-2 h-2 bg-blue-400 rounded-full animate-bounce" style={{ animationDelay: '0.1s' }}></div>
-                      <div className="w-2 h-2 bg-blue-400 rounded-full animate-bounce" style={{ animationDelay: '0.2s' }}></div>
-                    </div>
-                  </div>
-                </div>
+                <div className="rounded-2xl border border-white/5 bg-gray-800/70 px-4 py-3 text-sm text-gray-300">Gemini is researching…</div>
               </div>
             )}
           </div>
 
-          {/* Input Area */}
-          <div className="p-6 border-t border-gray-800">
-            <div className="flex gap-4">
+          <div className="border-t border-gray-800 p-4 sm:p-6">
+            {error && <p className="mb-3 rounded-lg border border-red-500/30 bg-red-500/10 px-3 py-2 text-sm text-red-300">{error}</p>}
+            <div className="flex items-end gap-3">
               <textarea
                 value={inputMessage}
-                onChange={(e) => setInputMessage(e.target.value)}
-                onKeyPress={handleKeyPress}
-                placeholder="Ask me anything about your research topic..."
-                className="flex-1 px-4 py-3 bg-gray-800/50 border border-gray-700 rounded-lg text-white placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent resize-none"
+                onChange={(event) => setInputMessage(event.target.value)}
+                onKeyDown={handleKeyDown}
+                placeholder="Ask Gemini to research a topic…"
+                className="min-h-[76px] flex-1 resize-none rounded-lg border border-gray-700 bg-gray-800/50 px-4 py-3 text-white placeholder-gray-400 outline-none transition focus:border-transparent focus:ring-2 focus:ring-blue-500"
                 rows={3}
                 disabled={isLoading}
               />
               <button
-                onClick={sendMessage}
+                type="button"
+                onClick={() => void sendMessage()}
                 disabled={isLoading || !inputMessage.trim()}
-                className="px-6 py-3 btn-primary rounded-lg disabled:opacity-50 disabled:cursor-not-allowed"
+                className="btn-primary rounded-lg px-5 py-3 disabled:cursor-not-allowed disabled:opacity-50"
               >
-                <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 19l9 2-9-18-9 18 9-2zm0 0v-8" />
-                </svg>
+                {isLoading ? 'Working…' : 'Send'}
               </button>
             </div>
-            <p className="text-xs text-gray-500 mt-2">
-              Press Enter to send, Shift+Enter for new line
-            </p>
+            <p className="mt-2 text-xs text-gray-500">Press Enter to send. Use Shift + Enter for a new line.</p>
           </div>
         </div>
       </div>
     </div>
   )
 }
-

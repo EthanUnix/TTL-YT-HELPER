@@ -67,11 +67,11 @@ export default function Settings() {
         .from('user_api_keys')
         .upsert({
           user_id: user.id,
-          gemini_key: apiKeys.gemini,
-          huggingface_key: apiKeys.huggingface,
-          pexels_key: apiKeys.pexels,
+          gemini_key: apiKeys.gemini.trim(),
+          huggingface_key: apiKeys.huggingface.trim(),
+          pexels_key: apiKeys.pexels.trim(),
           updated_at: new Date().toISOString()
-        })
+        }, { onConflict: 'user_id' })
 
       if (error) throw error
 
@@ -104,13 +104,13 @@ export default function Settings() {
         }),
       })
 
-      const result = await response.json()
+      const result = await response.json() as { success?: boolean; error?: string }
       
       setTestResults(prev => ({ 
         ...prev, 
         [service]: { 
-          status: result.success ? 'success' : 'error',
-          message: result.error || (result.success ? 'Connection successful' : 'Connection failed')
+          status: response.ok && result.success ? 'success' : 'error',
+          message: result.error || (response.ok && result.success ? 'Connection successful' : 'Connection failed')
         }
       }))
     } catch (error) {
@@ -119,7 +119,7 @@ export default function Settings() {
         ...prev, 
         [service]: { 
           status: 'error',
-          message: 'Network error occurred'
+          message: error instanceof Error ? error.message : 'Network error occurred'
         }
       }))
     }
